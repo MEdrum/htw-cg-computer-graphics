@@ -46,15 +46,15 @@ public class Aufgabe2 extends AbstractOpenGLBase {
         int vboId = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, vboId);
         glBufferData(GL_ARRAY_BUFFER, triangles, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, 0); // connect VBO
+        glEnableVertexAttribArray(0); // activate VBO
 
         // transfer colors to gpu
         int colorVboId = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, colorVboId);
         glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0); // connect VBO
+        glEnableVertexAttribArray(1); // activate VBO
 
 	}
 
