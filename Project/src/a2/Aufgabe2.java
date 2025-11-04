@@ -8,7 +8,7 @@ import lenz.opengl.ShaderProgram;
 public class Aufgabe2 extends AbstractOpenGLBase {
 
 	public static void main(String[] args) {
-		new Aufgabe2().start("CG Aufgabe 2", 700, 700);
+		new Aufgabe2().start("CG Aufgabe 2", 2000, 2000);
 	}
 
 	@Override
@@ -19,17 +19,43 @@ public class Aufgabe2 extends AbstractOpenGLBase {
 
 		// Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
         float [] triangles = new float[]{
-                -0.5f, -0.5f, -0.5f, 0.45f, 0.45f, -0.5f, //Dreieck 0  [x0, y0, x1, y1, x2, y2]
-                0.5f, 0.5f, 0.5f, -0.45f, -0.45f, 0.5f //Dreieck 1
+                -0.5f, -0.5f, //Dreieck 0
+                -0.5f, 0.45f,
+                0.45f, -0.5f,
+
+                0.5f, 0.5f, //Dreieck 1
+                0.5f, -0.45f,
+                -0.45f, 0.5f
             };
 
+        float[] colors = new float[]{
+            // Triangle 0
+            1.0f, 0.0f, 0.0f, // vertex 0 color
+            0.0f, 1.0f, 0.0f, // vertex 1 color
+            0.0f, 0.0f, 1.0f, // vertex 2 color
+            // Triangle 1
+            1.0f, 1.0f, 0.0f, // vertex 3 color
+            0.0f, 1.0f, 1.0f, // vertex 4 color
+            1.0f, 0.0f, 1.0f  // vertex 5 color
+        };
+
         int vaoId = glGenVertexArrays();
-        glBindVertexArray(vaoId);
+        glBindVertexArray(vaoId); // select first VAO
+
+        // transfer coordinates to gpu
         int vboId = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, vboId);
         glBufferData(GL_ARRAY_BUFFER, triangles, GL_STATIC_DRAW);
         glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, 0);
         glEnableVertexAttribArray(0);
+
+        // transfer colors to gpu
+        int colorVboId = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, colorVboId);
+        glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
+        glEnableVertexAttribArray(1);
+
 	}
 
 	@Override
