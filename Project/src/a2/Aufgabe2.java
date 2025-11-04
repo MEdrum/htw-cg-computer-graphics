@@ -17,7 +17,7 @@ public class Aufgabe2 extends AbstractOpenGLBase {
 		ShaderProgram shaderProgram = new ShaderProgram("aufgabe2");
 		glUseProgram(shaderProgram.getId());
 
-		// Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
+        // Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
         float [] triangles = new float[]{
                 -0.5f, -0.5f, //Dreieck 0
                 -0.5f, 0.45f,
@@ -42,21 +42,18 @@ public class Aufgabe2 extends AbstractOpenGLBase {
         int vaoId = glGenVertexArrays();
         glBindVertexArray(vaoId); // select first VAO
 
-        // transfer coordinates to gpu
-        int vboId = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glBufferData(GL_ARRAY_BUFFER, triangles, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, 0); // connect VBO
-        glEnableVertexAttribArray(0); // activate VBO
-
-        // transfer colors to gpu
-        int colorVboId = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, colorVboId);
-        glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0); // connect VBO
-        glEnableVertexAttribArray(1); // activate VBO
+        connect_vbo(triangles, 0, 2);
+        connect_vbo(colors, 1, 3);
 
 	}
+
+    private void connect_vbo(float[] vbo, int buffer_index, int element_size){
+        int vboId = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, vboId);
+        glBufferData(GL_ARRAY_BUFFER, vbo, GL_STATIC_DRAW);
+        glVertexAttribPointer(buffer_index, element_size, GL_FLOAT, false, 0, 0); // connect VBO
+        glEnableVertexAttribArray(buffer_index); // activate VBO
+    }
 
 	@Override
 	public void update() {
