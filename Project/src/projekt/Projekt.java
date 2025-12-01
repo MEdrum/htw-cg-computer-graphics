@@ -8,6 +8,8 @@ import lenz.opengl.ShaderProgram;
 public class Projekt extends AbstractOpenGLBase {
 
 	private ShaderProgram shaderProgram;
+    private Matrix4 transfromationMatrix = new  Matrix4();
+    private Matrix4 projectionMatrix = new  Matrix4();
 
 	public static void main(String[] args) {
         new Projekt().start("CG Projekt", 2000, 2000);
@@ -50,6 +52,8 @@ public class Projekt extends AbstractOpenGLBase {
         connect_vbo(triangles, 0, 2);
         connect_vbo(colors, 1, 3);
 
+        // TODO: transfer projection matrix as uniform to opengl
+
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
 		glEnable(GL_CULL_FACE); // backface culling aktivieren
 	}
@@ -64,14 +68,19 @@ public class Projekt extends AbstractOpenGLBase {
 
 	@Override
 	public void update() {
-		// Transformation durchfuehren (Matrix anpassen)
+		// TODO: Transformation durchfuehren (Matrix anpassen)
+        this.transfromationMatrix.rotateZ(0.001f);
+
 	}
 
 	@Override
 	protected void render() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Matrix an Shader uebertragen
+        // TODO: Matrix an Shader uebertragen
+        int transfromationMatrixHandle = glGetUniformLocation(shaderProgram.getId(), "transformationMatrix");
+        glUniformMatrix4fv(transfromationMatrixHandle, false, this.transfromationMatrix.getValuesAsArray());
+
 
 
 		// VAOs zeichnen
