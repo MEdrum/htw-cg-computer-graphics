@@ -8,6 +8,9 @@ import lenz.opengl.ShaderProgram;
 public class Projekt extends AbstractOpenGLBase {
 
 	private ShaderProgram shaderProgram;
+    private Matrix4 rotationMatrix = new  Matrix4();
+    private Matrix4 translationMatrix = new  Matrix4();
+    private Matrix4 scaleMatrix = new  Matrix4();
     private Matrix4 transfromationMatrix = new  Matrix4();
     private Matrix4 projectionMatrix = new  Matrix4(1, 1000);
 
@@ -22,14 +25,14 @@ public class Projekt extends AbstractOpenGLBase {
 
 		// Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
         float [] triangles = new float[]{
-                -0.5f, -0.5f, -2f, //Dreieck 0
-                0.45f, -0.5f, -2f,
-                -0.5f, 0.45f, -2f,
+                -0.5f, -0.5f, 0f, //Dreieck 0
+                0.45f, -0.5f, 0f,
+                -0.5f, 0.45f, 0f,
 
 
-                0.5f,   0.5f,  -2f, //Dreieck 1
-                -0.45f, 0.5f,  -2f,
-                0.5f,  -0.45f, -2f
+                0.5f,   0.5f,  0f, //Dreieck 1
+                -0.45f, 0.5f,  0f,
+                0.5f,  -0.45f, 0f
 
         };
 
@@ -52,6 +55,8 @@ public class Projekt extends AbstractOpenGLBase {
         connect_vbo(triangles, 0, 3);
         connect_vbo(colors, 1, 3);
 
+        this.translationMatrix.translate(0, 0, -2);
+
         // transfer projection matrix as uniform to opengl
         int projectionMatrixHandle = glGetUniformLocation(shaderProgram.getId(), "projectionMatrix");
         glUniformMatrix4fv(projectionMatrixHandle, false, this.projectionMatrix.getValuesAsArray());
@@ -70,7 +75,10 @@ public class Projekt extends AbstractOpenGLBase {
 
 	@Override
 	public void update() {
-        this.transfromationMatrix.rotateZ(0.01f);
+        this.transfromationMatrix = new Matrix4();
+        this.rotationMatrix.rotateX(0.01f);
+        this.transfromationMatrix.multiply(this.rotationMatrix).multiply(this.translationMatrix).multiply(this.scaleMatrix);
+
 	}
 
 	@Override
