@@ -9,7 +9,7 @@ public class Projekt extends AbstractOpenGLBase {
 
 	private ShaderProgram shaderProgram;
     private Matrix4 transfromationMatrix = new  Matrix4();
-    private Matrix4 projectionMatrix = new  Matrix4();
+    private Matrix4 projectionMatrix = new  Matrix4(1, 1000);
 
 	public static void main(String[] args) {
         new Projekt().start("CG Projekt", 2000, 2000);
@@ -22,14 +22,14 @@ public class Projekt extends AbstractOpenGLBase {
 
 		// Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
         float [] triangles = new float[]{
-                -0.5f, -0.5f, //Dreieck 0
-                0.45f, -0.5f,
-                -0.5f, 0.45f,
+                -0.5f, -0.5f, -2f, //Dreieck 0
+                0.45f, -0.5f, -2f,
+                -0.5f, 0.45f, -2f,
 
 
-                0.5f, 0.5f, //Dreieck 1
-                -0.45f, 0.5f,
-                0.5f, -0.45f
+                0.5f,   0.5f,  -2f, //Dreieck 1
+                -0.45f, 0.5f,  -2f,
+                0.5f,  -0.45f, -2f
 
         };
 
@@ -49,10 +49,12 @@ public class Projekt extends AbstractOpenGLBase {
         int vaoId = glGenVertexArrays();
         glBindVertexArray(vaoId); // select first VAO
 
-        connect_vbo(triangles, 0, 2);
+        connect_vbo(triangles, 0, 3);
         connect_vbo(colors, 1, 3);
 
-        // TODO: transfer projection matrix as uniform to opengl
+        // transfer projection matrix as uniform to opengl
+        int projectionMatrixHandle = glGetUniformLocation(shaderProgram.getId(), "projectionMatrix");
+        glUniformMatrix4fv(projectionMatrixHandle, false, this.projectionMatrix.getValuesAsArray());
 
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
 		glEnable(GL_CULL_FACE); // backface culling aktivieren
@@ -68,20 +70,16 @@ public class Projekt extends AbstractOpenGLBase {
 
 	@Override
 	public void update() {
-		// TODO: Transformation durchfuehren (Matrix anpassen)
-        this.transfromationMatrix.rotateZ(0.001f);
-
+        this.transfromationMatrix.rotateZ(0.01f);
 	}
 
 	@Override
 	protected void render() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // TODO: Matrix an Shader uebertragen
+        // Pass matrix to vertex shader
         int transfromationMatrixHandle = glGetUniformLocation(shaderProgram.getId(), "transformationMatrix");
         glUniformMatrix4fv(transfromationMatrixHandle, false, this.transfromationMatrix.getValuesAsArray());
-
-
 
 		// VAOs zeichnen
         glDrawArrays(GL_TRIANGLES, 0, 6);
