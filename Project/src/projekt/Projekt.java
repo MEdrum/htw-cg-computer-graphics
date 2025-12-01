@@ -23,29 +23,55 @@ public class Projekt extends AbstractOpenGLBase {
 		shaderProgram = new ShaderProgram("projekt");
 		glUseProgram(shaderProgram.getId());
 
+        /*
+        Tetrahedrons edges:
+        A = -1f, -1f, 1f,
+        B = 1f, -1f, -1f,
+        C = 1f, 1f, 1f,
+        D = -1f, 1f, -1f,
+
+        Triangles:
+        ABC
+        BDC
+        ACD
+        ADB
+        */
+
 		// Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
         float [] triangles = new float[]{
-                -0.5f, -0.5f, 0f, //Dreieck 0
-                0.45f, -0.5f, 0f,
-                -0.5f, 0.45f, 0f,
+                -1f, -1f, 1f, // ABC
+                1f, -1f, -1f,
+                1f, 1f, 1f,
 
+                1f, -1f, -1f, // BDC
+                -1f, 1f, -1f,
+                1f, 1f, 1f,
 
-                0.5f,   0.5f,  0f, //Dreieck 1
-                -0.45f, 0.5f,  0f,
-                0.5f,  -0.45f, 0f
+                -1f, -1f, 1f, // ACD
+                1f, 1f, 1f,
+                -1f, 1f, -1f,
 
+                -1f, -1f, 1f, // ADB
+                -1f, 1f, -1f,
+                1f, -1f, -1f
         };
 
         float[] colors = new float[]{
-                // Triangle 0
-                1.0f, 0.0f, 0.0f, // vertex 0 color
-                0.0f, 0.0f, 1.0f, // vertex 1 color
-                0.0f, 1.0f, 0.0f, // vertex 2 color
+                1f, 1f, 0f, // ABC
+                0f, 1f, 1f,
+                1f, 1f, 1f,
 
-                // Triangle 1
-                1.0f, 1.0f, 0.0f, // vertex 3 color
-                1.0f, 0.0f, 1.0f, // vertex 4 color
-                0.0f, 1.0f, 1.0f  // vertex 5 color
+                0f, 1f, 1f, // BDC
+                1f, 0f, 1f,
+                1f, 1f, 1f,
+
+                1f, 1f, 0f, // ACD
+                1f, 1f, 1f,
+                1f, 0f, 1f,
+
+                1f, 1f, 0f, // ADB
+                1f, 0f, 1f,
+                0f, 1f, 1f
 
         };
 
@@ -55,14 +81,15 @@ public class Projekt extends AbstractOpenGLBase {
         connect_vbo(triangles, 0, 3);
         connect_vbo(colors, 1, 3);
 
-        this.translationMatrix.translate(0, 0, -2);
+        this.translationMatrix.translate(0, 0, -4);
+        this.scaleMatrix.scale(0.4f);
 
         // transfer projection matrix as uniform to opengl
         int projectionMatrixHandle = glGetUniformLocation(shaderProgram.getId(), "projectionMatrix");
         glUniformMatrix4fv(projectionMatrixHandle, false, this.projectionMatrix.getValuesAsArray());
 
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
-		glEnable(GL_CULL_FACE); // backface culling aktivieren
+		//glEnable(GL_CULL_FACE); // backface culling aktivieren
 	}
 
     private void connect_vbo(float[] vbo, int buffer_index, int element_size){
@@ -90,6 +117,6 @@ public class Projekt extends AbstractOpenGLBase {
         glUniformMatrix4fv(transfromationMatrixHandle, false, this.transfromationMatrix.getValuesAsArray());
 
 		// VAOs zeichnen
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawArrays(GL_TRIANGLES, 0, 12);
 	}
 }
