@@ -8,11 +8,12 @@ import lenz.opengl.ShaderProgram;
 public class Projekt extends AbstractOpenGLBase {
 
 	private ShaderProgram shaderProgram;
+    private float[] light = new float[]{0.1f, 0.1f, 5.0f, 1f}; // x, y, z, I
     private Matrix4 rotationMatrix = new  Matrix4();
     private Matrix4 translationMatrix = new  Matrix4();
     private Matrix4 scaleMatrix = new  Matrix4();
     private Matrix4 transfromationMatrix = new  Matrix4();
-    private Matrix4 projectionMatrix = new  Matrix4(1, 1000);
+    private Matrix4 projectionMatrix = new  Matrix4(0.1f, 1000);
 
 	public static void main(String[] args) {
         new Projekt().start("CG Projekt", 2000, 2000);
@@ -75,18 +76,41 @@ public class Projekt extends AbstractOpenGLBase {
 
         };
 
+        float[] normals = new float[]{
+                1f, -1f, 1f, // ABC
+                1f, -1f, 1f,
+                1f, -1f, 1f,
+
+                1f, 1f, -1f, // BDC
+                1f, 1f, -1f,
+                1f, 1f, -1f,
+
+                -1f, 1f, 1f, // ACD
+                -1f, 1f, 1f,
+                -1f, 1f, 1f,
+
+                -1f, -1f, -1f, // ADB
+                -1f, -1f, -1f,
+                -1f, -1f, -1f
+        };
+
+
         int vaoId = glGenVertexArrays();
         glBindVertexArray(vaoId); // select first VAO
 
         connect_vbo(triangles, 0, 3);
         connect_vbo(colors, 1, 3);
+        connect_vbo(normals, 2, 3);
 
-        this.translationMatrix.translate(0, 0, -4);
+        this.translationMatrix.translate(0, 0, -5);
         this.scaleMatrix.scale(0.4f);
 
         // transfer projection matrix as uniform to opengl
         int projectionMatrixHandle = glGetUniformLocation(shaderProgram.getId(), "projectionMatrix");
         glUniformMatrix4fv(projectionMatrixHandle, false, this.projectionMatrix.getValuesAsArray());
+
+        int lightHandle = glGetUniformLocation(shaderProgram.getId(), "light");
+        glUniform4fv(lightHandle, this.light);
 
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
 		//glEnable(GL_CULL_FACE); // backface culling aktivieren
@@ -103,7 +127,7 @@ public class Projekt extends AbstractOpenGLBase {
 	@Override
 	public void update() {
         this.transfromationMatrix = new Matrix4();
-        this.rotationMatrix.rotateX(0.01f);
+        this.rotationMatrix.rotateY(0.01f).rotateX(0.01f);
         this.transfromationMatrix.multiply(this.rotationMatrix).multiply(this.translationMatrix).multiply(this.scaleMatrix);
 
 	}
