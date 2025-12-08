@@ -21,7 +21,7 @@ public class Projekt extends AbstractOpenGLBase {
 
 	@Override
 	protected void init() {
-		shaderProgram = new ShaderProgram("projekt");
+		shaderProgram = new ShaderProgram("project_gouraud");
 		glUseProgram(shaderProgram.getId());
 
         /*
