@@ -20,6 +20,7 @@ public class Projekt extends AbstractOpenGLBase {
     private Matrix4 translationMatrix = new  Matrix4();
     private Matrix4 scaleMatrix = new  Matrix4();
 
+    private Matrix4 objectMatrix = new  Matrix4();
     private Matrix4 phongObjectMatrix = new  Matrix4();
     private Matrix4 gouraudObjectMatrix = new  Matrix4();
     private Matrix4 textureObjectMatrix = new Matrix4();
@@ -137,40 +138,33 @@ public class Projekt extends AbstractOpenGLBase {
         this.translationMatrix.translate(0, 0, -5);
         this.scaleMatrix.scale(0.4f);
 
-        // transfer projection matrix as uniform to opengl
-        int phongProjectionMatrixHandle = glGetUniformLocation(phong.getId(), "projectionMatrix");
-        int gouraudProjectionMatrixHandle = glGetUniformLocation(gouraud.getId(), "projectionMatrix");
-        int textureProjectionMatrixHandle = glGetUniformLocation(texture_shader.getId(), "projectionMatrix");
-
-        int phongLightHandle = glGetUniformLocation(phong.getId(), "light");
-        int gouraudLightHandle = glGetUniformLocation(gouraud.getId(), "light");
-        int textureLightHandle = glGetUniformLocation(texture_shader.getId(), "light");
-
-        // phong
-        glUseProgram(phong.getId());
-        glUniformMatrix4fv(phongProjectionMatrixHandle, false, this.projectionMatrix.getValuesAsArray());
-        glUniform4fv(phongLightHandle, this.light);
-
-        // Gouraud
-        glUseProgram(gouraud.getId());
-        glUniformMatrix4fv(gouraudProjectionMatrixHandle, false, this.projectionMatrix.getValuesAsArray());
-        glUniform4fv(gouraudLightHandle, this.light);
-
-        // Texture Shader
-        glUseProgram(texture_shader.getId());
-        glUniformMatrix4fv(textureProjectionMatrixHandle, false, this.projectionMatrix.getValuesAsArray());
-        glUniform4fv(textureLightHandle, this.light);
+        init_shaders(new ShaderProgram[] {phong, gouraud, texture_shader}, projectionMatrix, light);
 
         // Textures
         wood = new Texture("wood_1k.jpg");
 
         glBindTexture(GL_TEXTURE_2D, wood.getId());
 
-
-
+        
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
 		glEnable(GL_CULL_FACE); // backface culling aktivieren
 	}
+
+    private void init_shaders(ShaderProgram[] shaders, Matrix4 projectionMatrix, float[] light){
+        String projectionMatrixName = "projectionMatrix";
+        String lightName = "light";
+
+        for(int i=0; i<shaders.length; i++){
+            int shaderID = shaders[i].getId();
+
+            int projectionMatrixHandle = glGetUniformLocation(shaderID, projectionMatrixName);
+            int lightHandle = glGetUniformLocation(shaderID, lightName);
+
+            glUseProgram(shaderID);
+            glUniformMatrix4fv(projectionMatrixHandle, false, projectionMatrix.getValuesAsArray());
+            glUniform4fv(lightHandle, light);
+        }
+    }
 
     private void connect_vbo(float[] vbo, int buffer_index, int element_size){
         int vboId = glGenBuffers();
@@ -182,12 +176,13 @@ public class Projekt extends AbstractOpenGLBase {
 
 	@Override
 	public void update() {
+        this.objectMatrix = new Matrix4();
         this.phongObjectMatrix = new Matrix4();
         this.gouraudObjectMatrix = new Matrix4();
         this.textureObjectMatrix = new Matrix4();
 
         this.rotationMatrix.rotateY(0.01f).rotateX(0.01f);
-        this.phongObjectMatrix.multiply(this.rotationMatrix).multiply(this.translationMatrix).multiply(this.scaleMatrix);
+        this.objectMatrix.multiply(this.rotationMatrix).multiply(this.translationMatrix).multiply(this.scaleMatrix);
 
         this.gouraudObjectMatrix.multiply(this.phongObjectMatrix).translate(0.5f, -0.5f, 0f);
         this.textureObjectMatrix.multiply(this.phongObjectMatrix).translate(0f, 0.5f, 0f);
@@ -199,24 +194,17 @@ public class Projekt extends AbstractOpenGLBase {
 	protected void render() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Pass matrix to vertex shader
-        int phongObjectMatrixHandle = glGetUniformLocation(phong.getId(), "transformationMatrix");
-        int gouraudObjectMatrixHandle = glGetUniformLocation(gouraud.getId(), "transformationMatrix");
-        int textureObjectMatrixHandle = glGetUniformLocation(texture_shader.getId(), "transformationMatrix");
-
-        // Draw VAOs
-        glUseProgram(gouraud.getId());
-        glUniformMatrix4fv(gouraudObjectMatrixHandle, false, this.gouraudObjectMatrix.getValuesAsArray());
-        glDrawArrays(GL_TRIANGLES, 0, 12);
-
-        glUseProgram(phong.getId());
-        glUniformMatrix4fv(phongObjectMatrixHandle, false, this.phongObjectMatrix.getValuesAsArray());
-        glDrawArrays(GL_TRIANGLES, 0, 12);
-
-        glUseProgram(texture_shader.getId());
-        glUniformMatrix4fv(textureObjectMatrixHandle, false, this.textureObjectMatrix.getValuesAsArray());
-        glDrawArrays(GL_TRIANGLES, 0, 12);
-
-
+        drawShadedVAOwithOffset(gouraud, objectMatrix, -0.5f, -0.5f, 0);
+        drawShadedVAOwithOffset(phong, objectMatrix, -0.5f, 0.5f, 0);
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, 0.5f, 0.5f, 0);
 	}
+
+    private void drawShadedVAOwithOffset(ShaderProgram shader, Matrix4 objectMatrix, float offset_x, float offset_y, float offset_z){
+        glUseProgram(shader.getId());
+        Matrix4 offsetMatrix = new Matrix4();
+        offsetMatrix.translate(offset_x, offset_y, offset_z);
+        int textureObjectMatrixHandle = glGetUniformLocation(shader.getId(), "transformationMatrix");
+        glUniformMatrix4fv(textureObjectMatrixHandle, false, new Matrix4(objectMatrix).multiply(offsetMatrix).getValuesAsArray());
+        glDrawArrays(GL_TRIANGLES, 0, 12);
+    }
 }
