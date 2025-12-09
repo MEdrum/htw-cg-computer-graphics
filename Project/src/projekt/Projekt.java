@@ -26,6 +26,7 @@ public class Projekt extends AbstractOpenGLBase {
     private Matrix4 textureObjectMatrix = new Matrix4();
 
     private Texture wood;
+    private Texture pixelart;
 
 
 	public static void main(String[] args) {
@@ -142,10 +143,9 @@ public class Projekt extends AbstractOpenGLBase {
 
         // Textures
         wood = new Texture("wood_1k.jpg");
+        pixelart = new Texture("pixelart_16p.png");
 
-        glBindTexture(GL_TEXTURE_2D, wood.getId());
 
-        
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
 		glEnable(GL_CULL_FACE); // backface culling aktivieren
 	}
@@ -196,6 +196,9 @@ public class Projekt extends AbstractOpenGLBase {
 
         drawShadedVAOwithOffset(gouraud, objectMatrix, -0.5f, -0.5f, 0);
         drawShadedVAOwithOffset(phong, objectMatrix, -0.5f, 0.5f, 0);
+        glBindTexture(GL_TEXTURE_2D, wood.getId());
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, 0.5f, -0.5f, 0);
+        glBindTexture(GL_TEXTURE_2D, pixelart.getId());
         drawShadedVAOwithOffset(texture_shader, objectMatrix, 0.5f, 0.5f, 0);
 	}
 
