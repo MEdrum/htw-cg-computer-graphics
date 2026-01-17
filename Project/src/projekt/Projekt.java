@@ -175,25 +175,7 @@ public class Projekt extends AbstractOpenGLBase {
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
 		glEnable(GL_CULL_FACE); // backface culling aktivieren
 	}
-    /*
-    private float[] getVertexArray(ReadableObj obj_object) {
-        float[] verticies = ObjData.getVerticesArray(obj_object);
-        int[] vert_indices = ObjData.getFaceVertexIndicesArray(obj_object);
-        return getVertexAtributesArray(obj_object, verticies, vert_indices, 3);
-    }
 
-    private float[] getNormalArray(ReadableObj obj_object) {
-        float[] normals = ObjData.getNormalsArray(obj_object);
-        int[] norm_indices = ObjData.getFaceNormalIndicesArray(obj_object);
-        return getVertexAtributesArray(obj_object, normals, norm_indices, 3);
-    }
-
-    private float[] getUVArray(ReadableObj obj_object) {
-        float[] uvCoords = ObjData.getTexCoordsArray(obj_object, 2);
-        int[] uv_indices = ObjData.getFaceTexCoordIndicesArray(obj_object);
-        return getVertexAtributesArray(obj_object, uvCoords, uv_indices, 2);
-    }
-    */
 
     private int getNumQuads(ObjFace[] faces){
         int quads = 0;
@@ -292,32 +274,6 @@ public class Projekt extends AbstractOpenGLBase {
         return triangleUVs;
     }
 
-    /*
-    private float[] getVertexArray(ReadableObj obj_object) {
-        int indicesCount = ObjData.getFaceVertexIndicesArray(obj_object).length;
-        int vertexAtributesCount = obj_object.getVertex(0).getDimensions();
-        float[] vertexArray = new float[indicesCount * vertexAtributesCount];
-        for (int i = 0; i < indicesCount; i++) {
-            for (int j = 0; j < vertexAtributesCount; j++) {
-                vertexArray[i*vertexAtributesCount+j] = obj_object.getVertex(i).get(j);
-            }
-        }
-        return vertexArray;
-    }
-
-    private float[] getNormalArray(ReadableObj obj_object) {
-        float[] normals = ObjData.getNormalsArray(obj_object);
-        int[] norm_indices = ObjData.getFaceNormalIndicesArray(obj_object);
-        return getVertexAtributesArray(obj_object, normals, norm_indices, 3);
-    }
-
-    private float[] getUVArray(ReadableObj obj_object) {
-        float[] uvCoords = ObjData.getTexCoordsArray(obj_object, 2);
-        int[] uv_indices = ObjData.getFaceTexCoordIndicesArray(obj_object);
-        return getVertexAtributesArray(obj_object, uvCoords, uv_indices, 2);
-    }
-
-     */
 
     private float[] getVertexAtributesArray(ReadableObj obj_object, float[] atributeList, int[] atributeIndexList, int atomicValuesPerVertex) {
         /*
