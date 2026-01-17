@@ -2,9 +2,15 @@ package projekt;
 
 import static org.lwjgl.opengl.GL30.*;
 
+import OBJloader.de.javagl.obj.*;
 import lenz.opengl.AbstractOpenGLBase;
 import lenz.opengl.ShaderProgram;
 import lenz.opengl.Texture;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+
 
 public class Projekt extends AbstractOpenGLBase {
 
@@ -127,6 +133,26 @@ public class Projekt extends AbstractOpenGLBase {
                 1f, 0f
         };
 
+        // Read an OBJ file
+        try {
+            Obj obj = ObjReader.read(createInputStreamFromObjectName("simpleSample.obj"));
+
+            // Access some elements of the OBJ file
+            System.out.println(obj.getVertex(0));
+            System.out.println(obj.getTexCoord(0));
+            System.out.println(obj.getNormal(0));
+            System.out.println(obj.getFace(0));
+            System.out.println(obj.getGroup(0));
+            System.out.println(obj.getMaterialGroup(0));
+            ObjFace[] faces = getFaceArray(obj);
+            triangles = getVertexArray(obj, faces);
+            normals = getNormalArray(obj, faces);
+            uv_coords = getUVArray(obj, faces);
+
+        } catch (IOException e) { throw new RuntimeException("unable to locate object", e); }
+
+
+
 
         int vaoId = glGenVertexArrays();
         glBindVertexArray(vaoId); // select first VAO
@@ -149,6 +175,171 @@ public class Projekt extends AbstractOpenGLBase {
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
 		glEnable(GL_CULL_FACE); // backface culling aktivieren
 	}
+    /*
+    private float[] getVertexArray(ReadableObj obj_object) {
+        float[] verticies = ObjData.getVerticesArray(obj_object);
+        int[] vert_indices = ObjData.getFaceVertexIndicesArray(obj_object);
+        return getVertexAtributesArray(obj_object, verticies, vert_indices, 3);
+    }
+
+    private float[] getNormalArray(ReadableObj obj_object) {
+        float[] normals = ObjData.getNormalsArray(obj_object);
+        int[] norm_indices = ObjData.getFaceNormalIndicesArray(obj_object);
+        return getVertexAtributesArray(obj_object, normals, norm_indices, 3);
+    }
+
+    private float[] getUVArray(ReadableObj obj_object) {
+        float[] uvCoords = ObjData.getTexCoordsArray(obj_object, 2);
+        int[] uv_indices = ObjData.getFaceTexCoordIndicesArray(obj_object);
+        return getVertexAtributesArray(obj_object, uvCoords, uv_indices, 2);
+    }
+    */
+
+    private int getNumQuads(ObjFace[] faces){
+        int quads = 0;
+        for (int i = 0; i < faces.length; i++) {
+            if (faces[i].getNumVertices() == 4){
+                quads++;
+            }
+        }
+        return quads;
+    }
+
+    private ObjFace[] getFaceArray(Obj obj) {
+        ObjFace[] faces = new ObjFace[obj.getNumFaces()];
+        for (int i = 0; i < obj.getNumFaces(); i++) {
+            ObjFace face = obj.getFace(i);
+            faces[i] = face;
+        }
+        return faces;
+    }
+
+    private float[] getVertexArray(ReadableObj obj, ObjFace[] faces){
+        int quads = getNumQuads(faces);
+        float[] triangleFaces = new float[(obj.getNumFaces()+quads)*9];
+        quads = 0;
+        for (int faceIdx = 0; faceIdx < obj.getNumFaces(); faceIdx++) {
+            ObjFace face = obj.getFace(faceIdx);
+            for (int vertIdx = 0; vertIdx < 3; vertIdx++){
+                FloatTuple vertex = obj.getVertex(face.getVertexIndex(vertIdx));
+                for (int axisIdx = 0; axisIdx < 3; axisIdx++){
+                    triangleFaces[(faceIdx+quads)*9 + vertIdx*3 + axisIdx] = vertex.get(axisIdx);
+                }
+            }
+            if (face.getNumVertices() == 3){
+                continue;
+            }
+            quads++;
+            for (int vertIdx = 0; vertIdx < 3; vertIdx++){
+                FloatTuple vertex = obj.getVertex(face.getVertexIndex((vertIdx+2)%4));
+                for (int axisIdx = 0; axisIdx < 3; axisIdx++){
+                    triangleFaces[(faceIdx+quads)*9 + vertIdx*3 + axisIdx] = vertex.get(axisIdx);
+                }
+            }
+        }
+        return triangleFaces;
+    }
+
+    private float[] getNormalArray(ReadableObj obj, ObjFace[] faces){
+        int quads = getNumQuads(faces);
+        float[] triangleNormals = new float[(obj.getNumFaces()+quads)*9];
+        quads = 0;
+        for (int faceIdx = 0; faceIdx < obj.getNumFaces(); faceIdx++) {
+            ObjFace face = obj.getFace(faceIdx);
+            for (int normIdx = 0; normIdx < 3; normIdx++){
+                FloatTuple normal = obj.getNormal(face.getNormalIndex(normIdx));
+                for (int axisIdx = 0; axisIdx < 3; axisIdx++){
+                    triangleNormals[(faceIdx+quads)*9 + normIdx*3 + axisIdx] = normal.get(axisIdx);
+                }
+            }
+            if (face.getNumVertices() == 3){
+                continue;
+            }
+            quads++;
+            for (int normIdx = 0; normIdx < 3; normIdx++){
+                FloatTuple normal = obj.getNormal(face.getNormalIndex((normIdx+2)%4));
+                for (int axisIdx = 0; axisIdx < 3; axisIdx++){
+                    triangleNormals[(faceIdx+quads)*9 + normIdx*3 + axisIdx] = normal.get(axisIdx);
+                }
+            }
+        }
+        return triangleNormals;
+    }
+
+    private float[] getUVArray(ReadableObj obj, ObjFace[] faces){
+        int quads = getNumQuads(faces);
+        float[] triangleUVs = new float[(obj.getNumFaces()+quads)*9];
+        quads = 0;
+        for (int faceIdx = 0; faceIdx < obj.getNumFaces(); faceIdx++) {
+            ObjFace face = obj.getFace(faceIdx);
+            for (int uvIdx = 0; uvIdx < 3; uvIdx++){
+                FloatTuple uv = obj.getTexCoord(face.getTexCoordIndex(uvIdx));
+                for (int axisIdx = 0; axisIdx < 2; axisIdx++){
+                    triangleUVs[(faceIdx+quads)*6 + uvIdx*3 + axisIdx] = uv.get(axisIdx);
+                }
+            }
+            if (face.getNumVertices() == 3){
+                continue;
+            }
+            quads++;
+            for (int uvIdx = 0; uvIdx < 3; uvIdx++){
+                FloatTuple uv = obj.getTexCoord(face.getTexCoordIndex((uvIdx+2)%4));
+                for (int axisIdx = 0; axisIdx < 2; axisIdx++){
+                    triangleUVs[(faceIdx+quads)*6 + uvIdx*3 + axisIdx] = uv.get(axisIdx);
+                }
+            }
+        }
+        return triangleUVs;
+    }
+
+    /*
+    private float[] getVertexArray(ReadableObj obj_object) {
+        int indicesCount = ObjData.getFaceVertexIndicesArray(obj_object).length;
+        int vertexAtributesCount = obj_object.getVertex(0).getDimensions();
+        float[] vertexArray = new float[indicesCount * vertexAtributesCount];
+        for (int i = 0; i < indicesCount; i++) {
+            for (int j = 0; j < vertexAtributesCount; j++) {
+                vertexArray[i*vertexAtributesCount+j] = obj_object.getVertex(i).get(j);
+            }
+        }
+        return vertexArray;
+    }
+
+    private float[] getNormalArray(ReadableObj obj_object) {
+        float[] normals = ObjData.getNormalsArray(obj_object);
+        int[] norm_indices = ObjData.getFaceNormalIndicesArray(obj_object);
+        return getVertexAtributesArray(obj_object, normals, norm_indices, 3);
+    }
+
+    private float[] getUVArray(ReadableObj obj_object) {
+        float[] uvCoords = ObjData.getTexCoordsArray(obj_object, 2);
+        int[] uv_indices = ObjData.getFaceTexCoordIndicesArray(obj_object);
+        return getVertexAtributesArray(obj_object, uvCoords, uv_indices, 2);
+    }
+
+     */
+
+    private float[] getVertexAtributesArray(ReadableObj obj_object, float[] atributeList, int[] atributeIndexList, int atomicValuesPerVertex) {
+        /*
+        atributeList contains for example vertex coordinates, uv coordinates or normal vectors
+        atributeIndexList defines in which order these atributes are arranged to form the object
+        atomicValuesPerVertex describes how many values should be atributed to a single vertex. Typically 3 for vertex coordinates, 2 for uv coordinates, 3 for normal vectors
+         */
+        float[] vertexAtributesArray = new float[atributeIndexList.length * atomicValuesPerVertex];
+        for (int i = 0; i < atributeIndexList.length *atomicValuesPerVertex; i+=atomicValuesPerVertex) {
+            for (int j = 0; j < atomicValuesPerVertex; j++) {
+                vertexAtributesArray[i+j] = atributeList[atributeIndexList[i/atomicValuesPerVertex]*atomicValuesPerVertex + j];
+            }
+        }
+        return vertexAtributesArray;
+    }
+
+    private InputStream createInputStreamFromObjectName(String resourceName) {
+        if (!resourceName.startsWith("/")) {
+            resourceName = "/res/objects/" + resourceName;
+        }
+        return getClass().getResourceAsStream(resourceName);
+    }
 
     private void init_shaders(ShaderProgram[] shaders, Matrix4 projectionMatrix, float[] light){
         String projectionMatrixName = "projectionMatrix";

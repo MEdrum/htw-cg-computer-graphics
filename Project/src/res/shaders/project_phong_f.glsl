@@ -12,20 +12,10 @@ void main(){
     vec3 L = normalize(vec3(light) - P);
     vec3 R = reflect(-L, normalize(N));
     vec3 V = normalize(-P);
-    vec3 H = normalize(L+V);
 
     // Phong
     color = 0.1 + light.w*(
         max(0,dot(L,normalize(N)))*v_color
         + pow(max(0,dot(R,V)), 30)*vec3(1, 1, 1)
     );
-
-    // Blinn phong
-/*
-    color = 0.1 + light.w*(
-    max(0,dot(L,normalize(N)))*v_color
-    + pow(max(0,dot(H,N)), 30)*vec3(0.3, 0.3, 0.3)
-    );
-*/
-
 }
