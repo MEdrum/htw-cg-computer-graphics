@@ -274,22 +274,6 @@ public class Projekt extends AbstractOpenGLBase {
         return triangleUVs;
     }
 
-
-    private float[] getVertexAtributesArray(ReadableObj obj_object, float[] atributeList, int[] atributeIndexList, int atomicValuesPerVertex) {
-        /*
-        atributeList contains for example vertex coordinates, uv coordinates or normal vectors
-        atributeIndexList defines in which order these atributes are arranged to form the object
-        atomicValuesPerVertex describes how many values should be atributed to a single vertex. Typically 3 for vertex coordinates, 2 for uv coordinates, 3 for normal vectors
-         */
-        float[] vertexAtributesArray = new float[atributeIndexList.length * atomicValuesPerVertex];
-        for (int i = 0; i < atributeIndexList.length *atomicValuesPerVertex; i+=atomicValuesPerVertex) {
-            for (int j = 0; j < atomicValuesPerVertex; j++) {
-                vertexAtributesArray[i+j] = atributeList[atributeIndexList[i/atomicValuesPerVertex]*atomicValuesPerVertex + j];
-            }
-        }
-        return vertexAtributesArray;
-    }
-
     private InputStream createInputStreamFromObjectName(String resourceName) {
         if (!resourceName.startsWith("/")) {
             resourceName = "/res/objects/" + resourceName;
