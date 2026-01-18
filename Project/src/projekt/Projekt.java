@@ -10,6 +10,8 @@ import lenz.opengl.Texture;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class Projekt extends AbstractOpenGLBase {
@@ -33,8 +35,11 @@ public class Projekt extends AbstractOpenGLBase {
 
     private Texture wood;
     private Texture pixelart;
+    private Texture plant_col;
+    private Texture plant_nor;
 
-    public int numTriangles;
+    public int vaoId;
+    public Map<Integer, Integer> numTriangles = new HashMap<>();
 
 
 	public static void main(String[] args) {
@@ -43,7 +48,7 @@ public class Projekt extends AbstractOpenGLBase {
 
 	@Override
 	protected void init() {
-		gouraud = new ShaderProgram("project_gouraud");
+        gouraud = new ShaderProgram("project_gouraud");
         phong = new ShaderProgram("project_phong");
         texture_shader = new ShaderProgram("project_texture_shader");
 
@@ -61,8 +66,8 @@ public class Projekt extends AbstractOpenGLBase {
         ADB
         */
 
-		// Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
-        float [] triangles = new float[]{
+        // Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
+        float[] triangles = new float[]{
                 -1f, -1f, 1f, // ABC
                 1f, -1f, -1f,
                 1f, 1f, 1f,
@@ -135,6 +140,17 @@ public class Projekt extends AbstractOpenGLBase {
                 1f, 0f
         };
 
+
+        vaoId = glGenVertexArrays();
+        glBindVertexArray(vaoId); // select first VAO
+        numTriangles.put(vaoId, triangles.length / 3);
+
+        connect_vbo(triangles, 0, 3);
+        connect_vbo(colors, 1, 3);
+        connect_vbo(normals, 2, 3);
+        connect_vbo(uv_coords, 3, 2);
+
+
         // Read an OBJ file
         try {
             Obj obj = ObjReader.read(createInputStreamFromObjectName("cube-tex.obj"));
@@ -146,32 +162,36 @@ public class Projekt extends AbstractOpenGLBase {
             normals = getNormalArray(obj, faces);
             uv_coords = getUVArray(obj, faces, 4);
 
-        } catch (IOException e) { throw new RuntimeException("unable to locate object", e); }
+        } catch (IOException e) {
+            throw new RuntimeException("unable to locate object", e);
+        }
 
 
-        int vaoId = glGenVertexArrays();
-        glBindVertexArray(vaoId); // select first VAO
-        numTriangles = triangles.length / 3;
+        vaoId = glGenVertexArrays();
+        glBindVertexArray(vaoId);
+        numTriangles.put(vaoId, triangles.length / 3);
 
         connect_vbo(triangles, 0, 3);
         connect_vbo(colors, 1, 3);
         connect_vbo(normals, 2, 3);
         connect_vbo(uv_coords, 3, 2);
 
+
         this.translationMatrix.translate(0, 0, -5);
         this.scaleMatrix.scale(0.4f);
 
-        init_shaders(new ShaderProgram[] {phong, gouraud, texture_shader}, projectionMatrix, light);
+        init_shaders(new ShaderProgram[]{phong, gouraud, texture_shader}, projectionMatrix, light);
 
         // Textures
         wood = new Texture("wood_1k.jpg");
         pixelart = new Texture("pixelart_16p.png");
+        plant_col = new Texture("indoor plant_2_COL.jpg");
+        plant_nor = new Texture("indoor plant_2_NOR.jpg");
 
 
-		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
-		//glEnable(GL_CULL_FACE); // backface culling aktivieren
-	}
-
+        glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
+        glEnable(GL_CULL_FACE); // backface culling aktivieren
+    }
 
     private int getNumQuads(ObjFace[] faces){
         int quads = 0;
@@ -330,12 +350,16 @@ public class Projekt extends AbstractOpenGLBase {
 	protected void render() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        drawShadedVAOwithOffset(gouraud, objectMatrix, numTriangles, -0.5f, -0.5f, 0);
-        drawShadedVAOwithOffset(phong, objectMatrix, numTriangles, -0.5f, 0.5f, 0);
+        vaoId = 1;
+        glBindVertexArray(vaoId);
+        drawShadedVAOwithOffset(gouraud, objectMatrix, numTriangles.get(vaoId), -0.6f, -0.5f, 0);
+        drawShadedVAOwithOffset(phong, objectMatrix, numTriangles.get(vaoId), -0.6f, 0.5f, 0);
+        vaoId = 2;
+        glBindVertexArray(vaoId);
         glBindTexture(GL_TEXTURE_2D, wood.getId());
-        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles, 0.5f, -0.5f, 0);
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles.get(vaoId), 0.6f, -0.5f, 0);
         glBindTexture(GL_TEXTURE_2D, pixelart.getId());
-        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles, 0.5f, 0.5f, 0);
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles.get(vaoId), 0.6f, 0.5f, 0);
 	}
 
     private void drawShadedVAOwithOffset(ShaderProgram shader, Matrix4 objectMatrix, int numTriangles, float offset_x, float offset_y, float offset_z){
