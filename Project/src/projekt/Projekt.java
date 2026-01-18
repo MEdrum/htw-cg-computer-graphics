@@ -34,6 +34,8 @@ public class Projekt extends AbstractOpenGLBase {
     private Texture wood;
     private Texture pixelart;
 
+    public int numTriangles;
+
 
 	public static void main(String[] args) {
         new Projekt().start("CG Projekt", 2000, 2000);
@@ -135,27 +137,21 @@ public class Projekt extends AbstractOpenGLBase {
 
         // Read an OBJ file
         try {
-            Obj obj = ObjReader.read(createInputStreamFromObjectName("simpleSample.obj"));
+            Obj obj = ObjReader.read(createInputStreamFromObjectName("cube-tex.obj"));
 
-            // Access some elements of the OBJ file
             System.out.println(obj.getVertex(0));
-            System.out.println(obj.getTexCoord(0));
-            System.out.println(obj.getNormal(0));
             System.out.println(obj.getFace(0));
-            System.out.println(obj.getGroup(0));
-            System.out.println(obj.getMaterialGroup(0));
             ObjFace[] faces = getFaceArray(obj);
             triangles = getVertexArray(obj, faces);
             normals = getNormalArray(obj, faces);
-            uv_coords = getUVArray(obj, faces);
+            uv_coords = getUVArray(obj, faces, 4);
 
         } catch (IOException e) { throw new RuntimeException("unable to locate object", e); }
 
 
-
-
         int vaoId = glGenVertexArrays();
         glBindVertexArray(vaoId); // select first VAO
+        numTriangles = triangles.length / 3;
 
         connect_vbo(triangles, 0, 3);
         connect_vbo(colors, 1, 3);
@@ -173,7 +169,7 @@ public class Projekt extends AbstractOpenGLBase {
 
 
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
-		glEnable(GL_CULL_FACE); // backface culling aktivieren
+		//glEnable(GL_CULL_FACE); // backface culling aktivieren
 	}
 
 
@@ -226,50 +222,58 @@ public class Projekt extends AbstractOpenGLBase {
         int quads = getNumQuads(faces);
         float[] triangleNormals = new float[(obj.getNumFaces()+quads)*9];
         quads = 0;
-        for (int faceIdx = 0; faceIdx < obj.getNumFaces(); faceIdx++) {
-            ObjFace face = obj.getFace(faceIdx);
-            for (int normIdx = 0; normIdx < 3; normIdx++){
-                FloatTuple normal = obj.getNormal(face.getNormalIndex(normIdx));
-                for (int axisIdx = 0; axisIdx < 3; axisIdx++){
-                    triangleNormals[(faceIdx+quads)*9 + normIdx*3 + axisIdx] = normal.get(axisIdx);
+        try{
+            for (int faceIdx = 0; faceIdx < obj.getNumFaces(); faceIdx++) {
+                ObjFace face = obj.getFace(faceIdx);
+                for (int normIdx = 0; normIdx < 3; normIdx++) {
+                    FloatTuple normal = obj.getNormal(face.getNormalIndex(normIdx));
+                    for (int axisIdx = 0; axisIdx < 3; axisIdx++) {
+                        triangleNormals[(faceIdx + quads) * 9 + normIdx * 3 + axisIdx] = normal.get(axisIdx);
+                    }
+                }
+                if (face.getNumVertices() == 3) {
+                    continue;
+                }
+                quads++;
+                for (int normIdx = 0; normIdx < 3; normIdx++) {
+                    FloatTuple normal = obj.getNormal(face.getNormalIndex((normIdx + 2) % 4));
+                    for (int axisIdx = 0; axisIdx < 3; axisIdx++) {
+                        triangleNormals[(faceIdx + quads) * 9 + normIdx * 3 + axisIdx] = normal.get(axisIdx);
+                    }
                 }
             }
-            if (face.getNumVertices() == 3){
-                continue;
-            }
-            quads++;
-            for (int normIdx = 0; normIdx < 3; normIdx++){
-                FloatTuple normal = obj.getNormal(face.getNormalIndex((normIdx+2)%4));
-                for (int axisIdx = 0; axisIdx < 3; axisIdx++){
-                    triangleNormals[(faceIdx+quads)*9 + normIdx*3 + axisIdx] = normal.get(axisIdx);
-                }
-            }
+        } catch(Exception e){
+            System.err.println(e.getMessage());
         }
         return triangleNormals;
     }
 
-    private float[] getUVArray(ReadableObj obj, ObjFace[] faces){
+    private float[] getUVArray(ReadableObj obj, ObjFace[] faces, int scale){
         int quads = getNumQuads(faces);
         float[] triangleUVs = new float[(obj.getNumFaces()+quads)*9];
         quads = 0;
-        for (int faceIdx = 0; faceIdx < obj.getNumFaces(); faceIdx++) {
-            ObjFace face = obj.getFace(faceIdx);
-            for (int uvIdx = 0; uvIdx < 3; uvIdx++){
-                FloatTuple uv = obj.getTexCoord(face.getTexCoordIndex(uvIdx));
-                for (int axisIdx = 0; axisIdx < 2; axisIdx++){
-                    triangleUVs[(faceIdx+quads)*6 + uvIdx*3 + axisIdx] = uv.get(axisIdx);
+        try{
+            for (int faceIdx = 0; faceIdx < obj.getNumFaces(); faceIdx++) {
+                ObjFace face = obj.getFace(faceIdx);
+                for (int uvIdx = 0; uvIdx < 3; uvIdx++){
+                    FloatTuple uv = obj.getTexCoord(face.getTexCoordIndex(uvIdx));
+                    for (int axisIdx = 0; axisIdx < 2; axisIdx++){
+                        triangleUVs[(faceIdx+quads)*6 + uvIdx*2 + axisIdx] = uv.get(axisIdx)*scale;
+                    }
+                }
+                if (face.getNumVertices() == 3){
+                    continue;
+                }
+                quads++;
+                for (int uvIdx = 0; uvIdx < 3; uvIdx++){
+                    FloatTuple uv = obj.getTexCoord(face.getTexCoordIndex((uvIdx+2)%4));
+                    for (int axisIdx = 0; axisIdx < 2; axisIdx++){
+                        triangleUVs[(faceIdx+quads)*6 + uvIdx*2 + axisIdx] = uv.get(axisIdx)*scale;
+                    }
                 }
             }
-            if (face.getNumVertices() == 3){
-                continue;
-            }
-            quads++;
-            for (int uvIdx = 0; uvIdx < 3; uvIdx++){
-                FloatTuple uv = obj.getTexCoord(face.getTexCoordIndex((uvIdx+2)%4));
-                for (int axisIdx = 0; axisIdx < 2; axisIdx++){
-                    triangleUVs[(faceIdx+quads)*6 + uvIdx*3 + axisIdx] = uv.get(axisIdx);
-                }
-            }
+        } catch(Exception e){
+            System.err.println(e.getMessage());
         }
         return triangleUVs;
     }
@@ -280,6 +284,7 @@ public class Projekt extends AbstractOpenGLBase {
         }
         return getClass().getResourceAsStream(resourceName);
     }
+
 
     private void init_shaders(ShaderProgram[] shaders, Matrix4 projectionMatrix, float[] light){
         String projectionMatrixName = "projectionMatrix";
@@ -312,7 +317,7 @@ public class Projekt extends AbstractOpenGLBase {
         this.gouraudObjectMatrix = new Matrix4();
         this.textureObjectMatrix = new Matrix4();
 
-        this.rotationMatrix.rotateY(0.01f).rotateX(0.01f);
+        this.rotationMatrix.rotateY(0.01f);//.rotateX(0.01f);
         this.objectMatrix.multiply(this.rotationMatrix).multiply(this.translationMatrix).multiply(this.scaleMatrix);
 
         this.gouraudObjectMatrix.multiply(this.phongObjectMatrix).translate(0.5f, -0.5f, 0f);
@@ -325,20 +330,20 @@ public class Projekt extends AbstractOpenGLBase {
 	protected void render() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        drawShadedVAOwithOffset(gouraud, objectMatrix, -0.5f, -0.5f, 0);
-        drawShadedVAOwithOffset(phong, objectMatrix, -0.5f, 0.5f, 0);
+        drawShadedVAOwithOffset(gouraud, objectMatrix, numTriangles, -0.5f, -0.5f, 0);
+        drawShadedVAOwithOffset(phong, objectMatrix, numTriangles, -0.5f, 0.5f, 0);
         glBindTexture(GL_TEXTURE_2D, wood.getId());
-        drawShadedVAOwithOffset(texture_shader, objectMatrix, 0.5f, -0.5f, 0);
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles, 0.5f, -0.5f, 0);
         glBindTexture(GL_TEXTURE_2D, pixelart.getId());
-        drawShadedVAOwithOffset(texture_shader, objectMatrix, 0.5f, 0.5f, 0);
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles, 0.5f, 0.5f, 0);
 	}
 
-    private void drawShadedVAOwithOffset(ShaderProgram shader, Matrix4 objectMatrix, float offset_x, float offset_y, float offset_z){
+    private void drawShadedVAOwithOffset(ShaderProgram shader, Matrix4 objectMatrix, int numTriangles, float offset_x, float offset_y, float offset_z){
         glUseProgram(shader.getId());
         Matrix4 offsetMatrix = new Matrix4();
         offsetMatrix.translate(offset_x, offset_y, offset_z);
         int textureObjectMatrixHandle = glGetUniformLocation(shader.getId(), "transformationMatrix");
         glUniformMatrix4fv(textureObjectMatrixHandle, false, new Matrix4(objectMatrix).multiply(offsetMatrix).getValuesAsArray());
-        glDrawArrays(GL_TRIANGLES, 0, 12);
+        glDrawArrays(GL_TRIANGLES, 0, numTriangles*3);
     }
 }
