@@ -342,9 +342,13 @@ public class Projekt extends AbstractOpenGLBase {
         this.rotationMatrix.rotateY(0.01f);//.rotateX(0.01f);
         this.objectMatrix.multiply(this.rotationMatrix).multiply(this.translationMatrix).multiply(this.scaleMatrix);
 
-        this.gouraudObjectMatrix.multiply(this.phongObjectMatrix).translate(0.5f, -0.5f, 0f);
+        this.gouraudObjectMatrix = new Matrix4(this.objectMatrix);
+        this.phongObjectMatrix = new Matrix4(this.objectMatrix);
+        this.phongObjectMatrix.multiply(this.gouraudObjectMatrix);
+
+        //this.gouraudObjectMatrix.multiply(this.phongObjectMatrix).translate(0.5f, -0.5f, 0f);
         this.textureObjectMatrix.multiply(this.phongObjectMatrix).translate(0f, 0.5f, 0f);
-        this.phongObjectMatrix.translate(-0.5f, -0.5f, 0f);
+        //this.phongObjectMatrix.translate(-0.5f, -0.5f, 0f);
 
 	}
 
@@ -354,8 +358,8 @@ public class Projekt extends AbstractOpenGLBase {
 
         vaoId = 1;
         glBindVertexArray(vaoId);
-        drawShadedVAOwithOffset(gouraud, objectMatrix, numTriangles.get(vaoId), -0.6f, -0.5f, 0);
-        drawShadedVAOwithOffset(phong, objectMatrix, numTriangles.get(vaoId), -0.6f, 0.5f, 0);
+        drawShadedVAOwithOffset(gouraud, gouraudObjectMatrix, numTriangles.get(vaoId), -1f, 0f, -1);
+        drawShadedVAOwithOffset(phong, phongObjectMatrix, numTriangles.get(vaoId), -1f, 0f, -1);
         vaoId = 2;
         glBindVertexArray(vaoId);
         glBindTexture(GL_TEXTURE_2D, wood.getId());
