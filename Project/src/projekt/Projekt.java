@@ -9,7 +9,6 @@ import lenz.opengl.Texture;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,8 +33,9 @@ public class Projekt extends AbstractOpenGLBase {
     private Matrix4 textureObjectMatrix = new Matrix4();
 
     private Texture wood;
-    private Texture pixelart;
-    private Texture plant_col;
+    private Texture wood_mm;
+    private Texture pixelart_bil;
+    private Texture pixelart_NN;
     private Texture plant_nor;
 
     public int vaoId;
@@ -43,7 +43,7 @@ public class Projekt extends AbstractOpenGLBase {
 
 
 	public static void main(String[] args) {
-        new Projekt().start("CG Projekt", 2000, 2000);
+        new Projekt().start("CG Projekt", 1500, 1500);
 	}
 
 	@Override
@@ -184,9 +184,11 @@ public class Projekt extends AbstractOpenGLBase {
 
         // Textures
         wood = new Texture("wood_1k.jpg");
-        pixelart = new Texture("pixelart_16p.png");
-        plant_col = new Texture("indoor plant_2_COL.jpg");
-        plant_nor = new Texture("indoor plant_2_NOR.jpg");
+        wood_mm =  new Texture("wood_1k.jpg", 10, true);
+        pixelart_bil = new Texture("pixelart_16p.png");
+        pixelart_NN = new Texture("pixelart_16p.png");
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 
         glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
@@ -357,9 +359,13 @@ public class Projekt extends AbstractOpenGLBase {
         vaoId = 2;
         glBindVertexArray(vaoId);
         glBindTexture(GL_TEXTURE_2D, wood.getId());
-        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles.get(vaoId), 0.6f, -0.5f, 0);
-        glBindTexture(GL_TEXTURE_2D, pixelart.getId());
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles.get(vaoId), 0.6f, -0.5f, -2.0f);
+        glBindTexture(GL_TEXTURE_2D, wood_mm.getId());
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles.get(vaoId), 0.6f, -1.5f, -2.0f);
+        glBindTexture(GL_TEXTURE_2D, pixelart_bil.getId());
         drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles.get(vaoId), 0.6f, 0.5f, 0);
+        glBindTexture(GL_TEXTURE_2D, pixelart_NN.getId());
+        drawShadedVAOwithOffset(texture_shader, objectMatrix, numTriangles.get(vaoId), 0.6f, 1.25f, 0);
 	}
 
     private void drawShadedVAOwithOffset(ShaderProgram shader, Matrix4 objectMatrix, int numTriangles, float offset_x, float offset_y, float offset_z){
